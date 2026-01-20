@@ -44,28 +44,16 @@ async function release() {
   spawnSync(["git", "push"]);
   spawnSync(["git", "push", "--tags"]);
 
-  // Create GitHub Release using gh CLI
-  console.log("🎉 Creating GitHub Release...");
-  const releaseResult = spawnSync([
-    "gh",
-    "release",
-    "create",
-    `v${newVersion}`,
-    bundlePath,
-    "--title",
-    `Release ${newVersion}`,
-    "--notes",
-    `Automated release ${newVersion}`,
-  ]);
-
-  if (releaseResult.exitCode !== 0) {
-    console.error("❌ GitHub release failed!");
-    console.error(releaseResult.stderr?.toString());
-    process.exit(1);
-  }
-
-  console.log(`✅ Release v${newVersion} created successfully!`);
-  console.log(`📦 Bundle uploaded to GitHub Releases`);
+  console.log("\n✅ Version bumped and pushed to GitHub!");
+  console.log(`📦 Tag: v${newVersion}`);
+  console.log("\n📋 Next steps:");
+  console.log(
+    "1. Go to: https://github.com/sakatimuna7/printer-http-service/releases/new",
+  );
+  console.log(`2. Select tag: v${newVersion}`);
+  console.log(`3. Upload: dist/app-bundle.zip`);
+  console.log("4. Click 'Publish release'");
+  console.log("\nOr install GitHub CLI and run: gh auth login");
 }
 
 release();

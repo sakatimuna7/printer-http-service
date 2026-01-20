@@ -32,13 +32,28 @@ This will:
 4. Commit version bump to git
 5. Create git tag `v1.0.1`
 6. Push to GitHub
-7. Create GitHub Release with `app-bundle.zip` attached
+
+Then you need to **manually create the GitHub Release**:
+
+1. Go to: https://github.com/sakatimuna7/printer-http-service/releases/new
+2. Select the tag that was just created (e.g., `v1.0.2`)
+3. Upload `dist/app-bundle.zip` as an asset
+4. Click "Publish release"
+
+### Optional: Auto-Release with GitHub CLI
+
+If you install GitHub CLI, the process will be fully automated:
+
+```bash
+brew install gh
+gh auth login
+```
+
+Then `bun run release` will create the GitHub Release automatically.
 
 ## Requirements
 
-- **GitHub CLI (`gh`)**: Install with `brew install gh` (Mac) or download from https://cli.github.com/
 - **Git**: Already configured with your repo
-- **Authenticated**: Run `gh auth login` first
 
 ## Usage
 
