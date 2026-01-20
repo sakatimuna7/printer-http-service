@@ -22,8 +22,13 @@ console.log("Initializing core... (Please wait 2 seconds)");
 // Use dynamic imports to catch loading errors
 async function start() {
   try {
+    console.log("Initializing USB environment...");
+    const { ensureNativeLib } = await import("./portable-init.ts");
+    const usbLib = await ensureNativeLib();
+
     console.log("Loading adapters...");
-    const { CustomUSB } = await import("./usb-adapter.ts");
+    const { CustomUSB, initializeUSB } = await import("./usb-adapter.ts");
+    initializeUSB(usbLib);
 
     console.log("Loading printer library...");
     const { default: escpos } = await import("escpos");

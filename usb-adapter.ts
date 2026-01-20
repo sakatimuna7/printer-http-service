@@ -1,9 +1,14 @@
-import usb from "usb";
 import EventEmitter from "events";
 
+let usb: any;
+
+export function initializeUSB(lib: any) {
+  usb = lib;
+}
+
 export class CustomUSB extends EventEmitter {
-  private device: usb.Device | null = null;
-  private endpoint: usb.OutEndpoint | null = null;
+  private device: any = null;
+  private endpoint: any = null;
 
   constructor(vid?: number, pid?: number) {
     super();
@@ -18,7 +23,7 @@ export class CustomUSB extends EventEmitter {
     }
   }
 
-  private findPrinter(): usb.Device | null {
+  private findPrinter(): any {
     console.log("Searching for USB printers...");
     const devices = usb.getDeviceList();
     console.log(`Found ${devices.length} USB devices in total.`);
@@ -56,7 +61,11 @@ export class CustomUSB extends EventEmitter {
 
     try {
       this.device.open();
-      const iface = this.device.interfaces[0]; // Usually first interface for printers
+      const iface = this.device.interfaces?.[0]; // Usually first interface for printers
+
+      if (!iface) {
+        return callback(new Error("No interface found on device"));
+      }
 
       // On non-Windows, detach kernel driver if active
       if (process.platform !== "win32") {
@@ -71,8 +80,8 @@ export class CustomUSB extends EventEmitter {
 
       iface.claim();
       this.endpoint = iface.endpoints.find(
-        (ep) => ep.direction === "out",
-      ) as usb.OutEndpoint;
+        (ep: any) => ep.direction === "out",
+      ) as any;
 
       if (!this.endpoint) {
         return callback(new Error("No out-endpoint found"));
@@ -89,7 +98,7 @@ export class CustomUSB extends EventEmitter {
       if (callback) callback(new Error("Device not open"));
       return;
     }
-    this.endpoint.transfer(data, (err) => {
+    this.endpoint.transfer(data, (err: any) => {
       if (callback) callback(err);
     });
   }

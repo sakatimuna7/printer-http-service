@@ -12,11 +12,12 @@
   "scripts": {
     "start": "bun run index.ts",
     "build:mac": "bun build --compile --target=bun-macos-arm64 ./index.ts --outfile ./dist/printer-service-mac",
-    "build:win": "bun build --compile --target=bun-windows-x64 ./index.ts --outfile ./dist/printer-service.exe"
+    "build:win": "bun build --compile --target=bun-windows-x64 --external usb ./index.ts --outfile ./dist/printer-service.exe",
+    "dist:win": "bun run build:win && powershell -NoProfile -Command \"Copy-Item -Recurse -Force 'node_modules/usb' -Destination 'dist/node_modules/usb'\"",
+    "build:portable": "bun run packager.ts && bun build --compile --target=bun-windows-x64 --external usb ./index.ts --outfile ./dist/printer-service-portable.exe"
   },
   "dependencies": {
     "escpos": "3.0.0-alpha.6",
-    "escpos-usb": "3.0.0-alpha.4",
     "usb": "^2.17.0"
   }
 }
