@@ -35,12 +35,6 @@ async function start() {
 
     const port = process.env.PORT || 5001;
 
-    // Helper to mimic user config
-    const kioskConfig = {
-      appName: "E-Klinik",
-      address: "Jl. Kebersihan Gg. Lisna No 84 Sukadana",
-    };
-
     function getPrinter(options?: { width?: number }) {
       try {
         const device = new CustomUSB();
@@ -52,40 +46,6 @@ async function start() {
         console.error("Printer Initialization Error:", err.message);
         throw err;
       }
-    }
-
-    async function printLayout(printer: any, data: any, info?: string) {
-      await printer
-        .align("CT")
-        .size(1, 1)
-        .text(kioskConfig.appName)
-        .size(0, 0)
-        .newLine()
-        .text(kioskConfig.address)
-        .newLine()
-        .drawLine()
-        .newLine()
-        .size(1, 1)
-        .text("Nomor Antrian")
-        .newLine()
-        .style("BU")
-        .size(3, 3)
-        .text(data.number)
-        .newLine()
-        .style("NORMAL")
-        .size(1, 1)
-        .text(data.service.toUpperCase())
-        .newLine()
-        .newLine()
-        .size(0, 0)
-        .text(info || "Mohon menunggu hingga nomor antrian anda dipanggil")
-        .newLine()
-        .style("BU")
-        .text(`${data.date} | ${data.time}`)
-        .style("NORMAL")
-        .newLine()
-        .newLine()
-        .cut();
     }
 
     const server = Bun.serve({
@@ -113,11 +73,6 @@ async function start() {
                 }
 
                 try {
-                  // Jika payload punya ticket, pakai layout spesial
-                  if (body.ticket) {
-                    await printLayout(printer, body.ticket);
-                  }
-
                   // Jika payload punya items, pakai layout generic
                   if (body.items) {
                     printer.font("a").align("CT").size(1, 1);

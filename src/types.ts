@@ -38,19 +38,9 @@ export interface PrintItem {
   };
 }
 
-export interface TicketData {
-  number: string;
-  service: string;
-  date: string;
-  time: string;
-}
-
 export interface PrintJob {
   items?: PrintItem[];
-  ticket?: TicketData;
   printer?: {
-    vid?: number;
-    pid?: number;
     width?: number;
   };
 }

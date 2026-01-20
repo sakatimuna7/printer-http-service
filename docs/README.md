@@ -77,19 +77,6 @@ Hasil akhir berupa `printer-service.exe` akan muncul di root folder.
 }
 ```
 
-#### Contoh Payload (Ticket - Layout Spesial):
-
-```json
-{
-  "ticket": {
-    "number": "A-001",
-    "service": "POLI UMUM",
-    "date": "Senin, 19 Januari 2026",
-    "time": "16:45:00"
-  }
-}
-```
-
 ---
 
 ## 📝 Referensi Payload (Types)
