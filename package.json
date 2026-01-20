@@ -1,5 +1,6 @@
 {
   "name": "eklinik-printer-service",
+  "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
@@ -10,11 +11,18 @@
     "typescript": "^5.0.0"
   },
   "scripts": {
-    "start": "bun run index.ts",
-    "build:mac": "bun build --compile --target=bun-macos-arm64 ./index.ts --outfile ./dist/printer-service-mac",
-    "build:win": "bun build --compile --target=bun-windows-x64 --external usb ./index.ts --outfile ./dist/printer-service.exe",
+    "start": "bun run src/index.ts",
+    "build:mac": "bun build --minify --compile --target=bun-macos-arm64 ./src/index.ts --outfile ./dist/printer-service-mac",
+    "build:win": "bun build --minify --compile --target=bun-windows-x64 --external usb ./src/index.ts --outfile ./dist/printer-service.exe",
     "dist:win": "bun run build:win && powershell -NoProfile -Command \"Copy-Item -Recurse -Force 'node_modules/usb' -Destination 'dist/node_modules/usb'\"",
-    "build:portable": "bun run packager.ts && bun build --compile --target=bun-windows-x64 --external usb ./index.ts --outfile ./dist/printer-service-portable.exe"
+    "build:linux": "bun build --minify --compile --target=bun-linux-x64 --external usb ./src/index.ts --outfile ./dist/printer-service-linux",
+    "dist:linux": "bun run build:linux && mkdir -p dist/node_modules && cp -r node_modules/usb dist/node_modules/usb",
+    "build:portable": "bun run scripts/packager.ts && bun build --minify --compile --target=bun-windows-x64 --external usb ./src/index.ts --outfile ./dist/printer-service-portable.exe",
+    "build:portable:linux": "bun run scripts/packager.ts && bun build --minify --compile --target=bun-linux-x64 --external usb ./src/index.ts --outfile ./dist/printer-service-portable-linux",
+    "bundle": "bun run scripts/bundler.ts",
+    "build:launcher:win": "GOOS=windows GOARCH=amd64 go build -o dist/launcher.exe ./launchers/go/main.go",
+    "build:launcher:linux": "GOOS=linux GOARCH=amd64 go build -o dist/launcher ./launchers/go/main.go",
+    "release": "bun run scripts/release.ts"
   },
   "dependencies": {
     "escpos": "3.0.0-alpha.6",

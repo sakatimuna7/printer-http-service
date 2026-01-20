@@ -23,12 +23,12 @@ Printer thermal tidak akan terdeteksi oleh service jika driver aslinya masih akt
 
 ## 3. Menjalankan Service
 
-1. Copy file `printer-service.exe` ke folder pilihan Anda (misal: `C:\eKlinik\`).
+1. Copy file `printer-service.exe` ke folder pilihan Anda (misal: `C:\aplikasi-kamu\`).
 2. Double-click `printer-service.exe`.
 3. Jendela hitam (Console) akan muncul dan menampilkan pesan:
-   `Printer service starting on port 3000...`
-   `Server running at http://localhost:3000`
-4. **Jangan tutup jendela ini** selama aplikasi eKlinik digunakan.
+   `Printer service starting on port 5001...`
+   `Server running at http://localhost:5001`
+4. **Jangan tutup jendela ini** selama aplikasi digunakan.
 
 ## 4. Setup Auto-Start (Berjalan Otomatis Saat Windows Nyala)
 
@@ -45,5 +45,5 @@ Supaya Anda tidak perlu klik manual setiap kali komputer dinyalakan:
 ## Troubleshooting
 
 - **Printer Tidak Ditemukan**: Ulangi langkah **No. 2 (Zadig)**. Pastikan driver yang dipilih adalah WinUSB.
-- **Port Terpakai**: Jika muncul error `EADDRINUSE`, artinya ada aplikasi lain yang memakai port 3000. Coba restart komputer.
-- **Firewall**: Jika aplikasi dari komputer lain ingin mengakses printer ini, pastikan Anda memberikan izin (Allow) pada Windows Firewall untuk port 3000.
+- **Port Terpakai**: Jika muncul error `EADDRINUSE`, artinya ada aplikasi lain yang memakai port 5001. Coba restart komputer.
+- **Firewall**: Jika aplikasi dari komputer lain ingin mengakses printer ini, pastikan Anda memberikan izin (Allow) pada Windows Firewall untuk port 5001.

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from "fs";
+import { existsSync, mkdirSync, writeFileSync, rmSync } from "fs";
 import { join, dirname } from "path";
 import { spawnSync } from "bun";
 import os from "os";
@@ -10,40 +10,57 @@ export async function ensureNativeLib() {
   const targetDir = join(baseDir, "node_modules", "usb");
 
   const gypDir = join(baseDir, "node_modules", "node-gyp-build");
+  const isWindows = os.platform() === "win32";
 
   if (!existsSync(targetDir) || !existsSync(gypDir)) {
     console.log("🚀 First time setup: Extracting native drivers...");
     console.log(`📂 Destination: ${baseDir}`);
-    
+
     try {
-      const { usbBase64 } = await import("./usb-data.ts");
-      
+      const { usbBase64 } = await import("../scripts/usb-data.ts");
+
       const zipPath = join(baseDir, "usb_extract.zip");
       const buffer = Buffer.from(usbBase64, "base64");
 
       if (!existsSync(baseDir)) {
         mkdirSync(baseDir, { recursive: true });
       }
-      
+
       writeFileSync(zipPath, buffer);
 
-      if (!existsSync(join(baseDir, "node_modules"))) {
-        mkdirSync(join(baseDir, "node_modules"), { recursive: true });
+      const nodeModulesDir = join(baseDir, "node_modules");
+      if (!existsSync(nodeModulesDir)) {
+        mkdirSync(nodeModulesDir, { recursive: true });
       }
 
       console.log("🤐 Unzipping drivers...");
-      const extractResult = spawnSync([
-        "powershell",
-        "-NoProfile",
-        "-Command",
-        `Expand-Archive -Path "${zipPath}" -DestinationPath "${join(baseDir, "node_modules")}" -Force`,
-      ]);
 
-      if (extractResult.exitCode !== 0) {
-        throw new Error("Extraction failed: " + extractResult.stderr.toString());
+      let extractResult;
+      if (isWindows) {
+        extractResult = spawnSync([
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          `Expand-Archive -Path "${zipPath}" -DestinationPath "${nodeModulesDir}" -Force`,
+        ]);
+      } else {
+        // On macOS/Linux, we use the 'unzip' command
+        extractResult = spawnSync([
+          "unzip",
+          "-o",
+          zipPath,
+          "-d",
+          nodeModulesDir,
+        ]);
       }
 
-      spawnSync(["powershell", "-NoProfile", "-Command", `Remove-Item "${zipPath}" -Force`]);
+      if (extractResult.exitCode !== 0) {
+        throw new Error(
+          "Extraction failed: " + extractResult.stderr.toString(),
+        );
+      }
+
+      rmSync(zipPath, { force: true });
       console.log("✅ Extraction complete!");
     } catch (err) {
       console.error("❌ Failed to extract native drivers:", err);

@@ -33,7 +33,7 @@ async function start() {
     console.log("Loading printer library...");
     const { default: escpos } = await import("escpos");
 
-    const port = process.env.PORT || 3000;
+    const port = process.env.PORT || 5001;
 
     // Helper to mimic user config
     const kioskConfig = {

@@ -1,133 +1,75 @@
-# eKlinik Printer Service
+# E-Klinik Printer Service
 
-Service ringan berbasis [Bun](https://bun.sh) untuk mencetak ke thermal printer (ESC/POS) melalui koneksi USB. Service ini menyediakan API HTTP sehingga bisa dipanggil dari aplikasi web atau lokal lainnya.
+A lightweight, cross-platform printer service built with Bun for thermal receipt printers.
 
-## Fitur
+## 📁 Project Structure
 
-- **HTTP API**: Endpoint `/print` untuk menerima data cetak.
-- **Auto-Discovery**: Mencari printer USB secara otomatis.
-- **Cross-Platform**: Berjalan di macOS (ARM/Intel) dan Windows (x64).
-- **Standalone Binary**: Dapat dikompilasi menjadi `.exe` tanpa perlu install Node/Bun di PC tujuan.
-
----
-
-## 🚀 Instalasi & Pengembangan
-
-### Prasyarat
-
-- [Bun](https://bun.sh) v1.1.x atau versi terbaru.
-
-### Setup Proyek
-
-```bash
-# Clone repository dan masuk ke direktori
-cd eklinik-printer-service
-
-# Install dependencies
-bun install
+```
+eklinik-printer-service/
+├── src/                    # Application source code
+│   ├── index.ts           # Main entry point
+│   ├── types.ts           # Type definitions
+│   ├── usb-adapter.ts     # USB adapter implementation
+│   └── portable-init.ts   # Portable initialization logic
+│
+├── scripts/               # Build and utility scripts
+│   ├── bundler.ts        # Creates app-bundle.zip
+│   ├── packager.ts       # Creates usb-data.ts
+│   └── usb-data.ts       # Generated USB module data
+│
+├── launchers/            # Thin client bootstrapper
+│   └── go/              # Go bootstrapper source
+│       └── main.go
+│
+├── dist/                # Build outputs
+│   ├── app-bundle.zip              # 3.2MB - Application bundle
+│   ├── launcher.exe                # 8.4MB - Windows bootstrapper
+│   └── printer-service-portable.exe # 106MB - Standalone executable
+│
+└── docs/                # Documentation
+    ├── README.md        # Full documentation
+    └── SETUP_GUIDE.md   # Setup guide
 ```
 
-### Menjalankan Service (Mode Development)
+## 🚀 Quick Start
+
+### Development
 
 ```bash
+bun install
 bun start
 ```
 
-Service akan berjalan di `http://localhost:3000`.
+### Build Options
 
----
-
-## 📦 Membangun Executable (.exe) untuk Windows
-
-Untuk membuat file executable tunggal yang bisa dijalankan di Windows x64:
+**Thin Client (Recommended - 11MB total)**
 
 ```bash
-bun run build:win
+bun run bundle                  # Creates dist/app-bundle.zip (3.2MB)
+bun run build:launcher:win      # Creates dist/launcher.exe (8.4MB)
 ```
 
-Hasil akhir berupa `printer-service.exe` akan muncul di root folder.
+**Standalone Executable (106MB)**
 
----
-
-## 🛠 Penggunaan API
-
-### Health Check
-
-**URL**: `GET /health`  
-**Response**: `{"status": "ok", "bun": "1.1.38"}`
-
-### Mencetak Dokumen
-
-**URL**: `POST /print`  
-**Content-Type**: `application/json`
-
-#### Contoh Payload (Items):
-
-```json
-{
-  "items": [
-    {
-      "type": "text",
-      "content": "eKlinik Thermal Service\n",
-      "options": { "align": "center", "size": [2, 2], "style": "b" }
-    },
-    { "type": "feed", "content": "3" },
-    { "type": "cut" }
-  ]
-}
+```bash
+bun run build:portable          # Windows
+bun run build:portable:linux    # Linux
 ```
 
-#### Contoh Payload (Ticket - Layout Spesial):
+## 📖 Documentation
 
-```json
-{
-  "ticket": {
-    "number": "A-001",
-    "service": "POLI UMUM",
-    "date": "Senin, 19 Januari 2026",
-    "time": "16:45:00"
-  }
-}
-```
+See [docs/README.md](./docs/README.md) for full documentation and [docs/SETUP_GUIDE.md](./docs/SETUP_GUIDE.md) for deployment instructions.
 
----
+## 🔧 Available Scripts
 
-## 📝 Referensi Payload (Types)
+- `bun start` - Start development server
+- `bun run bundle` - Create thin client bundle
+- `bun run build:launcher:win` - Build Windows launcher
+- `bun run build:launcher:linux` - Build Linux launcher
+- `bun run build:portable` - Build standalone Windows executable
+- `bun run build:portable:linux` - Build standalone Linux executable
 
-Service ini menggunakan library `escpos`. Berikut adalah opsi yang tersedia untuk setiap item:
+## 📦 Distribution
 
-| Field                    | Tipe                                                                                                        | Deskripsi                                              |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `type`                   | `text`, `qr`, `barcode`, `feed`, `cut`, `line`, `drawLine`, `doubleLine`, `newLine`, `table`, `tableCustom` | Jenis aksi yang dilakukan.                             |
-| `content`                | `string` / `array`                                                                                          | Data sesuai `type` (teks atau array untuk table).      |
-| `options.align`          | `left`, `center`, `right`                                                                                   | Perataan teks (atau `lt`, `ct`, `rt`).                 |
-| `options.size`           | `[width, height]`                                                                                           | Skala font (contoh: `[1, 1]` atau `[2, 2]`).           |
-| `options.style`          | `normal`, `b`, `i`, `u`, `u2`, `bi`, `biu`                                                                  | Style teks.                                            |
-| `options.char`           | `string`                                                                                                    | Karakter untuk `line` (default: `-`).                  |
-| `options.columns`        | `array`                                                                                                     | Definisi kolom untuk `tableCustom` (`width`, `align`). |
-| `options.cellSize`       | `number`                                                                                                    | Ukuran pixel QR (default: 6).                          |
-| `options.level`          | `L`, `M`, `Q`, `H`                                                                                          | Error correction QR (default: L).                      |
-| `options.width_barcode`  | `number`                                                                                                    | Lebar barcode.                                         |
-| `options.height_barcode` | `number`                                                                                                    | Tinggi barcode.                                        |
-
-### Mendukung Perintah Kompleks
-
-Anda bisa menambahkan implementasi untuk QR Code atau Barcode di `index.ts` dengan mengikuti dokumentasi [escpos npm](https://www.npmjs.com/package/escpos).
-
----
-
-## ⚠️ Penting untuk Pengguna Windows (Driver)
-
-Karena service ini mengakses USB secara langsung melalui `libusb`, printer thermal Anda mungkin tidak langsung terdeteksi jika masih menggunakan driver default bawaan Windows.
-
-1. Download **[Zadig](https://zadig.akeo.ie/)**.
-2. Pilih printer thermal Anda dari daftar device.
-3. Klik **"Replace Driver"** untuk mengubah drivernya menjadi **WinUSB**.
-4. Setelah itu, `printer-service.exe` baru bisa menemukan printer tersebut.
-
----
-
-## Troubleshooting
-
-- **Port In Use**: Jika muncul error `EADDRINUSE: Failed to start server`, pastikan tidak ada proses lain yang berjalan di port 3000. Gunakan `lsof -i :3000` (mac) untuk mengecek.
-- **Printer Not Found**: Pastikan kabel USB tercolok rapat dan printer dalam kondisi ON.
+**Thin Client**: Distribute `launcher.exe` + `app-bundle.zip` (~11MB)
+**Standalone**: Distribute `printer-service-portable.exe` (~106MB)
