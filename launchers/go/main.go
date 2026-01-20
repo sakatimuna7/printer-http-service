@@ -144,7 +144,7 @@ func downloadBun(destDir string) error {
 	case "linux":
 		url = fmt.Sprintf("https://github.com/oven-sh/bun/releases/download/bun-%s/bun-linux-x64.zip", BUN_VER)
 	case "darwin":
-		url = fmt.Sprintf("https://github.com/oven-sh/bun/releases/download/bun-%s/bun-darwin-arm64.zip", BUN_VER)
+		url = fmt.Sprintf("https://github.com/oven-sh/bun/releases/download/bun-%s/bun-darwin-aarch64.zip", BUN_VER)
 	default:
 		return fmt.Errorf("unsupported OS: %s", runtime.GOOS)
 	}
@@ -165,7 +165,7 @@ func downloadBun(destDir string) error {
 	} else if runtime.GOOS == "linux" {
 		subfolder = "bun-linux-x64"
 	} else if runtime.GOOS == "darwin" {
-		subfolder = "bun-darwin-arm64"
+		subfolder = "bun-darwin-aarch64"
 	}
 
 	if subfolder != "" {
