@@ -12,7 +12,10 @@ export interface PrintItem {
     | "newLine"
     | "table"
     | "tableCustom";
-  content?: string | any[];
+  content?:
+    | string
+    | any[]
+    | { text: string; align?: string; width?: number; style?: string }[];
   options?: {
     align?: "lt" | "ct" | "rt" | "left" | "center" | "right";
     width?: number;
@@ -34,7 +37,12 @@ export interface PrintItem {
     columns?: {
       width: number;
       align?: "left" | "center" | "right";
+      style?: string;
     }[];
+    tableOptions?: {
+      encoding?: string;
+      size?: [number, number];
+    };
   };
 }
 

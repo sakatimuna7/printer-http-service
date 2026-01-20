@@ -60,7 +60,9 @@ export class CustomUSB extends EventEmitter {
     if (!this.device) return callback(new Error("No device"));
 
     try {
+      console.log("Attempting to open USB device...");
       this.device.open();
+      console.log("Native USB device opened.");
       const iface = this.device.interfaces?.[0]; // Usually first interface for printers
 
       if (!iface) {
@@ -71,6 +73,7 @@ export class CustomUSB extends EventEmitter {
       if (process.platform !== "win32") {
         if (iface.isKernelDriverActive()) {
           try {
+            console.log("Detaching kernel driver...");
             iface.detachKernelDriver();
           } catch (e) {
             console.error("Could not detach kernel driver:", e);
@@ -78,6 +81,7 @@ export class CustomUSB extends EventEmitter {
         }
       }
 
+      console.log("Claiming interface...");
       iface.claim();
       this.endpoint = iface.endpoints.find(
         (ep: any) => ep.direction === "out",
@@ -87,8 +91,10 @@ export class CustomUSB extends EventEmitter {
         return callback(new Error("No out-endpoint found"));
       }
 
+      console.log("USB device ready for writing.");
       callback(null);
     } catch (err) {
+      console.error("USB adapter open error:", err);
       callback(err);
     }
   }
@@ -98,7 +104,18 @@ export class CustomUSB extends EventEmitter {
       if (callback) callback(new Error("Device not open"));
       return;
     }
+    // console.log(`Writing ${data.length} bytes to USB...`);
+    console.log(
+      `[${new Date().toISOString()}] USB Write: Starting transfer of ${data.length} bytes`,
+    );
     this.endpoint.transfer(data, (err: any) => {
+      if (err) {
+        console.error(`[${new Date().toISOString()}] USB Transfer Error:`, err);
+      } else {
+        console.log(
+          `[${new Date().toISOString()}] USB Write: Transfer completed successfully`,
+        );
+      }
       if (callback) callback(err);
     });
   }
@@ -106,9 +123,12 @@ export class CustomUSB extends EventEmitter {
   close(callback?: (error: any) => void) {
     if (this.device) {
       try {
+        console.log("Closing USB device...");
         this.device.close();
+        console.log("USB device closed.");
         if (callback) callback(null);
       } catch (err) {
+        console.error("USB device close error:", err);
         if (callback) callback(err);
       }
     } else {

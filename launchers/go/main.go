@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 type GitHubRelease struct {
@@ -77,15 +78,96 @@ func main() {
 		}
 	}
 
-	fmt.Println("🚀 Starting Service...")
-	cmd := exec.Command(bunExe, "run", appBundle)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = os.Stdin
-	
-	if err := cmd.Run(); err != nil {
-		fmt.Printf("❌ Service exited with error: %v\n", err)
-		pause()
+	for {
+		// 3. Check for updates on every restart
+		checkForUpdates(binDir)
+
+		fmt.Println("🚀 Starting Service...")
+		cmd := exec.Command(bunExe, "run", appBundle)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = os.Stdin
+
+		// --- Watchdog Mechanism ---
+		done := make(chan bool)
+		go func() {
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-done:
+					return
+				case <-ticker.C:
+					// Ping health endpoint
+					resp, err := http.Get("http://localhost:5001/health")
+					if err != nil || resp.StatusCode != 200 {
+						fmt.Printf("⚠️ Watchdog: Service unresponsive (err: %v). Killing process...\n", err)
+						if cmd.Process != nil {
+							cmd.Process.Kill()
+						}
+						return
+					}
+					resp.Body.Close()
+				}
+			}
+		}()
+		// --------------------------
+
+		if err := cmd.Run(); err != nil {
+			fmt.Printf("❌ Service exited: %v\n", err)
+		} else {
+			fmt.Println("ℹ️ Service stopped.")
+		}
+		close(done)
+
+		fmt.Println("🔄 Restarting in 2 seconds...")
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func getCurrentVersion(binDir string) string {
+	data, err := os.ReadFile(filepath.Join(binDir, "version"))
+	if err != nil {
+		return ""
+	}
+	return string(data)
+}
+
+func setCurrentVersion(binDir string, version string) {
+	os.WriteFile(filepath.Join(binDir, "version"), []byte(version), 0644)
+}
+
+func checkForUpdates(binDir string) {
+	current := getCurrentVersion(binDir)
+	fmt.Printf("🔍 Checking for updates... (Current: %s)\n", current)
+
+	apiURL := fmt.Sprintf("https://api.github.com/repos/%s/%s/releases/latest", REPO_OWNER, REPO_NAME)
+	resp, err := http.Get(apiURL)
+	if err != nil {
+		fmt.Printf("⚠️ Update check failed: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return
+	}
+
+	var release GitHubRelease
+	if err := json.NewDecoder(resp.Body).Decode(&release); err != nil {
+		return
+	}
+
+	if release.TagName != current {
+		fmt.Printf("✨ New version available: %s! Updating...\n", release.TagName)
+		if err := downloadLatestBundle(binDir); err != nil {
+			fmt.Printf("❌ Update failed: %v\n", err)
+		} else {
+			setCurrentVersion(binDir, release.TagName)
+			fmt.Printf("✅ Updated to %s\n", release.TagName)
+		}
+	} else {
+		fmt.Println("✅ Service is up to date.")
 	}
 }
 
@@ -132,7 +214,7 @@ func downloadLatestBundle(destDir string) error {
 	}
 
 	os.Remove(zipPath)
-	fmt.Println("✅ Bundle installed successfully!")
+	// No longer printing success here as checkForUpdates handles it
 	return nil
 }
 
