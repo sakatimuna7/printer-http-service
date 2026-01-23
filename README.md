@@ -1,4 +1,4 @@
-# E-Klinik Printer Service
+# HTTP Printer Service
 
 A lightweight, cross-platform printer service built with Bun for thermal receipt printers.
 
